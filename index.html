@@ -1,0 +1,346 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Golden HEMP (GHEMP) – токен реального сектора</title>
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌿</text></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0a2f1f 0%, #1a4a2a 100%);
+            color: #f0f0f0;
+            line-height: 1.5;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+        .header { text-align: center; margin-bottom: 3rem; }
+        .logo {
+            font-size: 4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #F5E56B, #D4AF37);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+        }
+        .tagline { font-size: 1.2rem; color: #c0e0c0; margin-top: 0.5rem; }
+        .card {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(8px);
+            border-radius: 32px;
+            padding: 1.8rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255,215,0,0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 20px 30px -15px rgba(0,0,0,0.4); border-color: rgba(210,180,70,0.5); }
+        h2 { font-size: 1.8rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .stats-grid { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: space-between; margin-top: 1rem; }
+        .stat-item { background: rgba(0,0,0,0.3); border-radius: 24px; padding: 1.2rem; flex: 1; min-width: 150px; text-align: center; }
+        .stat-number { font-size: 2.2rem; font-weight: bold; color: #F5E56B; }
+        .button {
+            display: inline-block;
+            background: #D4AF37;
+            color: #0a2f1f;
+            font-weight: bold;
+            padding: 0.8rem 2rem;
+            border-radius: 60px;
+            text-decoration: none;
+            margin: 0.5rem 0.5rem 0 0;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .button:hover { background: #F5E56B; transform: scale(1.02); }
+        .button-outline { background: transparent; border: 1px solid #D4AF37; color: #D4AF37; }
+        .button-outline:hover { background: #D4AF37; color: #0a2f1f; }
+        .footer { text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; }
+        .admin-panel {
+            background: #1e2a1a;
+            border-radius: 28px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            border: 1px dashed #F5E56B;
+            display: none;
+        }
+        .admin-panel.visible { display: block; }
+        .admin-panel h3 { color: #F5E56B; margin-bottom: 1rem; }
+        .admin-control { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+        .small-note { font-size: 0.8rem; opacity: 0.7; margin-top: 1rem; }
+        .chart-container { margin-top: 1.5rem; background: rgba(0,0,0,0.3); border-radius: 24px; padding: 1rem; }
+        canvas { max-height: 350px; width: 100%; }
+        .share-buttons { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+        .share-btn {
+            background: rgba(0,0,0,0.4);
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+        }
+        .share-btn:hover { background: #D4AF37; color: #0a2f1f; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.3rem; font-size: 0.9rem; opacity: 0.8; }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 0.6rem 1rem;
+            border-radius: 40px;
+            border: none;
+            background: #2a3a2a;
+            color: white;
+            box-sizing: border-box;
+        }
+        .swap-widget-container { min-height: 480px; margin-top: 1rem; background: rgba(0,0,0,0.2); border-radius: 24px; padding: 1rem; }
+        .contact-email { background: #2a3a2a; padding: 1rem; border-radius: 28px; text-align: center; margin-top: 1rem; word-break: break-all; }
+        @media (max-width: 700px) { .container { padding: 1rem; } .logo { font-size: 2.5rem; } }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script type="module">
+        import createSwap from 'https://cdn.jsdelivr.net/npm/@mytonswap/widget@latest/dist/cdn/mytonswap-widget.js';
+        window.createSwap = createSwap;
+    </script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAdmin = urlParams.get('admin') === 'ghemp2026';
+        if (isAdmin) {
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('adminPanel').classList.add('visible');
+            });
+        }
+
+        let realViews = parseInt(localStorage.getItem('ghemp_real_views') || '0');
+        let fakeViews = parseInt(localStorage.getItem('ghemp_fake_views') || '0');
+        let lastPrice = null;
+
+        function updateViewDisplay() {
+            if (!isAdmin) return;
+            document.getElementById('viewCount').innerText = realViews + fakeViews;
+            document.getElementById('realViewCount').innerText = realViews;
+        }
+        function addFakeViews(amount) {
+            if (!isAdmin) return;
+            fakeViews += amount;
+            localStorage.setItem('ghemp_fake_views', fakeViews);
+            updateViewDisplay();
+        }
+        function resetViews() {
+            if (!isAdmin) return;
+            fakeViews = 0;
+            realViews = 0;
+            localStorage.setItem('ghemp_fake_views', fakeViews);
+            localStorage.setItem('ghemp_real_views', realViews);
+            updateViewDisplay();
+        }
+        const today = new Date().toDateString();
+        if (localStorage.getItem('ghemp_last_visit') !== today) {
+            realViews++;
+            localStorage.setItem('ghemp_real_views', realViews);
+            localStorage.setItem('ghemp_last_visit', today);
+        }
+
+        const TOKEN_ADDRESS = 'EQB44nHZsGv5qXy3XqLm1Q8wVpK2RzJtYdF9cXaPbM';
+        async function fetchPrice() {
+            try {
+                const url = `https://api.dexscreener.com/latest/dex/search?q=${TOKEN_ADDRESS}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.pairs && data.pairs.length > 0) {
+                    const pair = data.pairs.find(p => p.quoteToken.symbol === 'USDT');
+                    if (pair) {
+                        const price = parseFloat(pair.priceUsd).toFixed(8);
+                        const volume = parseFloat(pair.volume.h24).toLocaleString();
+                        document.getElementById('priceValue').innerText = `$${price}`;
+                        document.getElementById('volumeValue').innerText = `$${volume}`;
+                        if (lastPrice !== null) {
+                            const el = document.getElementById('priceValue');
+                            if (parseFloat(price) > lastPrice) { el.style.color = '#00ff00'; setTimeout(() => el.style.color = '#F5E56B', 300); }
+                            else if (parseFloat(price) < lastPrice) { el.style.color = '#ff4444'; setTimeout(() => el.style.color = '#F5E56B', 300); }
+                        }
+                        lastPrice = parseFloat(price);
+                    } else { document.getElementById('priceValue').innerHTML = '<span style="color:#ffaa00;">Нет данных</span>'; }
+                } else { document.getElementById('priceValue').innerHTML = '<span style="color:#ffaa00;">Нет данных</span>'; }
+            } catch(e) { console.error(e); document.getElementById('priceValue').innerHTML = '<span style="color:#ffaa00;">Ошибка</span>'; }
+        }
+
+        let chart = null;
+        const priceHistory = [], timeLabels = [];
+        async function updateChart() {
+            try {
+                const url = `https://api.dexscreener.com/latest/dex/search?q=${TOKEN_ADDRESS}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.pairs && data.pairs.length) {
+                    const pair = data.pairs.find(p => p.quoteToken.symbol === 'USDT');
+                    if (pair && pair.priceUsd) {
+                        const currentPrice = parseFloat(pair.priceUsd);
+                        priceHistory.push(currentPrice);
+                        timeLabels.push(new Date().toLocaleTimeString());
+                        if (priceHistory.length > 30) { priceHistory.shift(); timeLabels.shift(); }
+                        if (chart) {
+                            chart.data.datasets[0].data = [...priceHistory];
+                            chart.data.labels = [...timeLabels];
+                            chart.update('active');
+                        }
+                    }
+                }
+            } catch(e) { console.error(e); }
+        }
+        async function initChart() {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: timeLabels, datasets: [{ label: 'Цена GHEMP (USD)', data: priceHistory, borderColor: '#D4AF37', backgroundColor: 'rgba(212,175,55,0.1)', tension: 0.3, fill: true }] },
+                options: { responsive: true, maintainAspectRatio: true, animation: { duration: 500 }, plugins: { legend: { labels: { color: '#f0f0f0' } } }, scales: { x: { ticks: { color: '#f0f0f0' } }, y: { ticks: { color: '#f0f0f0' } } } }
+            });
+            for(let i=0;i<5;i++) { await updateChart(); await new Promise(r=>setTimeout(r,200)); }
+            setInterval(updateChart, 30000);
+        }
+
+        async function initSwapWidget() {
+            if (!window.createSwap) {
+                setTimeout(initSwapWidget, 500);
+                return;
+            }
+            const USDT_JETTON_ADDRESS = 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs';
+            const GHEMP_JETTON_ADDRESS = TOKEN_ADDRESS;
+            const container = document.getElementById('swap-widget');
+            if (!container) return;
+            container.innerHTML = '';
+            try {
+                await window.createSwap('swap-widget', {
+                    default_pay_token: USDT_JETTON_ADDRESS,
+                    default_receive_token: GHEMP_JETTON_ADDRESS,
+                    lock_pay_token: false,
+                    lock_receive_token: true,
+                    default_slippage: 1.0,
+                    ui_preferences: { primary_color: "#D4AF37", dark_color: "#0a2f1f" },
+                    theme: 'dark',
+                    default_tokens: [
+                        { address: GHEMP_JETTON_ADDRESS, symbol: 'GHEMP', name: 'Golden HEMP', decimals: 9 },
+                        { address: USDT_JETTON_ADDRESS, symbol: 'USDT', name: 'Tether USD', decimals: 6 }
+                    ],
+                    pin_tokens: [USDT_JETTON_ADDRESS, GHEMP_JETTON_ADDRESS, 'TON']
+                });
+                console.log('Виджет MyTonSwap загружен');
+            } catch (error) {
+                console.error(error);
+                document.getElementById('swap-widget').innerHTML = '<div style="text-align:center; padding:2rem;">⚠️ Виджет временно недоступен. Купить токен можно напрямую на DeDust: <a href="https://dedust.io/pools/EQBnSkfzr157r4WtFesPW2IFy2rqrk70hTk57sEXDhrpG6Rx" target="_blank" class="button">Купить на DeDust →</a></div>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('investorForm');
+            if (form) {
+                form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    const name = document.getElementById('investorName').value;
+                    const tg = document.getElementById('investorTg').value;
+                    const amount = document.getElementById('investorAmount').value;
+                    let requests = JSON.parse(localStorage.getItem('ghemp_requests') || '[]');
+                    requests.push({ name, tg, amount, date: new Date().toISOString() });
+                    localStorage.setItem('ghemp_requests', JSON.stringify(requests));
+                    alert('Спасибо! Ваша заявка сохранена. Свяжитесь с нами: goldenhemp@rwa.green');
+                    form.reset();
+                });
+            }
+            if (isAdmin) {
+                updateViewDisplay();
+                document.getElementById('boostViewsBtn')?.addEventListener('click', () => addFakeViews(100));
+                document.getElementById('resetViewsBtn')?.addEventListener('click', resetViews);
+            }
+            fetchPrice();
+            initChart();
+            setInterval(fetchPrice, 60000);
+            initSwapWidget();
+        });
+    </script>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="logo">🌿 GOLDEN HEMP</div>
+        <div class="tagline">Токен, обеспеченный реальным сектором – промышленной коноплей</div>
+        <div style="margin-top: 1rem;">
+            <a href="#token" class="button">О токене</a>
+            <a href="#invest" class="button button-outline">Инвесторам</a>
+        </div>
+    </div>
+
+    <div class="card" id="token">
+        <h2>🌱 Что такое GHEMP?</h2>
+        <p>Golden HEMP (GHEMP) — цифровой токен на блокчейне TON, привязанный к реальной экономике: выращиванию и переработке <strong>технической конопли</strong>. Возрождаем традиции, объединяем сельское хозяйство с блокчейном.</p>
+        <div class="stats-grid">
+            <div class="stat-item"><div class="stat-number">$18.6 млрд</div><div>рынок промконопли к 2032</div></div>
+            <div class="stat-item"><div class="stat-number" id="priceValue">$...</div><div>текущая цена GHEMP</div></div>
+            <div class="stat-item"><div class="stat-number" id="volumeValue">$...</div><div>объём за 24ч</div></div>
+        </div>
+        <div class="chart-container">
+            <h3>📈 График цены</h3>
+            <canvas id="priceChart" width="400" height="200" style="max-width:100%; height:auto;"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🔄 Купить GHEMP</h2>
+        <p>Обменяйте USDT или TON на GHEMP прямо здесь — через безопасный виджет MyTonSwap.</p>
+        <div id="swap-widget" class="swap-widget-container">
+            <div style="text-align: center; padding: 2rem;">Загрузка виджета...</div>
+        </div>
+        <div class="share-buttons">
+            <div class="share-btn" onclick="window.open('https://t.me/share/url?url='+encodeURIComponent(window.location.href)+'&text=Golden%20HEMP%20токен%20реального%20сектора','_blank')">📱 Telegram</div>
+            <div class="share-btn" onclick="window.open('https://twitter.com/intent/tweet?text=Golden%20HEMP%20токен%20реального%20сектора&url='+encodeURIComponent(window.location.href),'_blank')">🐦 Twitter</div>
+            <div class="share-btn" onclick="navigator.clipboard.writeText(window.location.href); alert('Ссылка скопирована!')">🔗 Копировать ссылку</div>
+        </div>
+    </div>
+
+    <div class="card" id="invest">
+        <h2>💎 Инвесторам и партнёрам</h2>
+        <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
+            <li>✅ Новый канал сбыта продукции через криптосообщество</li>
+            <li>✅ Краудфандинг под будущий урожай (предоплата без процентов)</li>
+            <li>✅ Прозрачность цепочки поставок на блокчейне</li>
+            <li>✅ PR и интеграция с экосистемой Telegram</li>
+        </ul>
+        <h3>📝 Оставьте заявку</h3>
+        <form id="investorForm">
+            <div class="form-group"><label>Ваше имя</label><input type="text" id="investorName" placeholder="Иван Иванов" required></div>
+            <div class="form-group"><label>Telegram (username)</label><input type="text" id="investorTg" placeholder="ivan_ivanov" required></div>
+            <div class="form-group"><label>Интересующая сумма (USD)</label><input type="number" id="investorAmount" placeholder="10000" required></div>
+            <button type="submit" class="button">Отправить заявку</button>
+        </form>
+        <div class="contact-email">
+            Или напишите напрямую: <strong>goldenhemp@rwa.green</strong>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🚀 Дорожная карта</h2>
+        <ul style="margin-left: 1.5rem;">
+            <li><strong>✅ Сейчас:</strong> Токен создан, пулы ликвидности активны, листинг на CoinGecko в процессе.</li>
+            <li><strong>🔜 1 месяц:</strong> Запуск приёма GHEMP у реальных производителей (скидки на масло, ткани).</li>
+            <li><strong>📅 3 месяца:</strong> Первые 100 держателей, маркетинговая кампания в Telegram.</li>
+            <li><strong>🌍 6 месяцев:</strong> Выход на топ-5 DEX TON, интеграция с Telegram Wallet.</li>
+        </ul>
+    </div>
+
+    <div id="adminPanel" class="admin-panel">
+        <h3>🔧 Админ-панель (только для основателя)</h3>
+        <div class="admin-control">
+            <span>📊 Просмотров: <strong id="viewCount">0</strong> (реальных: <span id="realViewCount">0</span>)</span>
+            <button id="boostViewsBtn" class="button button-outline" style="padding: 0.4rem 1rem;">+100 накрутить</button>
+            <button id="resetViewsBtn" class="button button-outline" style="padding: 0.4rem 1rem;">Сбросить всё</button>
+        </div>
+        <div class="small-note">* Накрутка только для статистики, реальные просмотры раз в день.</div>
+    </div>
+
+    <div class="footer">
+        <p>🌿 Golden HEMP — возрождаем традиции, строим будущее.</p>
+        <p>Контракт TON: <span style="font-family: monospace;">EQB44nHZsGv5qXy3XqLm1Q8wVpK2RzJtYdF9cXaPbM</span></p>
+        <p>📧 По вопросам партнёрства: goldenhemp@rwa.green</p>
+    </div>
+</div>
+</body>
+</html>
